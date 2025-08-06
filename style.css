@@ -1,0 +1,19 @@
+.big {
+    font-size: 50px;
+    font-weight: bold;
+}
+.app {
+    font-family: 'Cantarell';
+}
+/* This is a highly specific rule that will force the pill shape */
+button.pill {
+  border-radius: 9999px;
+  min-height: 20px;  
+  /* You may need to also set padding to prevent it from getting distorted */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.mid {
+  font-size: 20px;
+  font-weight: bold;
+}
