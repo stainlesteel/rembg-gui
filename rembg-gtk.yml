@@ -1,0 +1,14 @@
+app-id: com.github.stainlesteel.rembg-gui
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: ./main
+finish-args:
+   - --socket=x11
+   - --share=ipc
+   - --device=dri
+   - --filesystem=host
+   - talk-name=org.freedesktop.secrets
+   - talk-name=org.freedesktop.portal.Fcitx
+
+# work in progress!!

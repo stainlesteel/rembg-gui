@@ -1,0 +1,5 @@
+rembg=2.0.67
+PyGObject=3.52.3
+threading
+io
+pillow=11.3.0
