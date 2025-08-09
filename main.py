@@ -225,19 +225,12 @@ class MyWindow(Adw.ApplicationWindow):
         geuge = f"{dpath}/{self.name}"
         with open(geuge, 'wb') as o:
             o.write(self.outi)
-
-
-
-
-
-
-            
+           
 def on_activate(app):
     # Create window
     win = MyWindow(application=app)
     win.present()
-
-
+    
 class MyApp(Adw.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -249,15 +242,6 @@ class MyApp(Adw.Application):
         Gtk.StyleContext.add_provider_for_display(
             self.dis, gss, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
-
-        #adw_css_path = glob.glob('/usr/share/themes/Adwaita/gtk-4.0/gtk.css')
-        #if adw_css_path:
-        #    adw_gss = Gtk.CssProvider()
-        #    adw_gss.load_from_path(adw_css_path[0])
-        #    Gtk.StyleContext.add_provider_for_display(
-        #        self.dis, adw_gss, Gtk.STYLE_PROVIDER_PRIORITY_THEME
-        #    )
-
 
         cfile = os.path.join(os.path.dirname(__file__), "style.css")
         gss.load_from_path(cfile)
