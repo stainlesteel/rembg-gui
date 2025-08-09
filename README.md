@@ -7,7 +7,7 @@ You click the continue button and select an image.
 Background removal may not be fully accurate for all images.
 ## Installation
 ### Generic Linux (x86-64)
-A binary in the 'Releases' tab in GitHub will be available.
+A binary in the 'Releases' tab in GitHub is available, in .zip or .tar.gz. 
 ### Flatpak
 work in progress
 ### Python 3.1x
