@@ -7,6 +7,7 @@ from gi.repository import Gtk, Gdk, Adw, Gio, GdkPixbuf
 import io
 from PIL import UnidentifiedImageError
 import threading
+import time
 
 class MyWindow(Adw.ApplicationWindow):
     def __init__(self, application, **kargs):
@@ -107,8 +108,14 @@ class MyWindow(Adw.ApplicationWindow):
         fil = self.diag.open_finish(response)
         try:
            if fil:
-               print("success!")
                fpath = fil.get_path()
+               extensions = os.path.splitext(fpath)
+               if extensions[1] == ".iso":
+                    iso = self.error("Failure", "Did you just try to import an ISO image?")
+                    # this works because the connecting below brings an error,
+                    # and stops rembg from using an iso image
+                    iso.connect("response", lambda d, r: d.destroy())
+                    pass
                print(f"{fpath}")
 
                with open(fpath, 'rb') as f:
@@ -129,8 +136,10 @@ class MyWindow(Adw.ApplicationWindow):
                self.gex = Gtk.CenterBox()
                self.cbox.append(self.gex)
 
-               self.img_txt = Gtk.Label(label=self.name)
-               self.img_txt.set_wrap(True)
+               self.img_txt = Gtk.EditableLabel()
+               self.img_txt.set_text(f"{self.name}")
+               self.img_txt.set_hexpand(True)
+               self.img_txt.set_width_chars(20)
                self.img_txt.set_margin_start(20)
                self.img_txt.set_margin_top(10)
                self.gex.set_start_widget(self.img_txt)
@@ -170,28 +179,20 @@ class MyWindow(Adw.ApplicationWindow):
                self.back.set_visible(True)
                self.header.pack_start(self.back)
                self.back.connect("clicked", self.rerun)
-           else:
-               info = Gtk.MessageDialog(
-                   transient_for=self,
-                   modal=True,
-                   message=Gtk.MessageType.ERROR,
-                   buttons=Gtk.ButtonsType.Ok,
-                   text="Failure",
-               )
-               info.format_secondary_text("A valid file path wasn't given.")
-               info.run()
-               info.destroy()
         except UnidentifiedImageError:
+            self.error("Failure", "Python couldn't identify this as an image.")
+    def error(self, text, secondary):
             info = Gtk.MessageDialog(
                    transient_for=self,
                    modal=True,
                    buttons=Gtk.ButtonsType.OK,
-                   text="Failure",
-                   secondary_text="Python couldn't identify this as an image.",
+                   text=text,
+                   secondary_text=secondary,
             )
             info.add_css_class("app")
             info.present()
             info.connect("response", lambda d, r: d.destroy())
+
 
     def rerun(self, button):
         self.back.set_visible(False)
@@ -216,15 +217,20 @@ class MyWindow(Adw.ApplicationWindow):
 
 
     def fifw(self, button):
-        fold = Gtk.FileDialog(title="Select Folder")
+        fold = Gtk.FileDialog.new()
+        fold.set_title(title="Select Folder")
+        fold.set_modal(modal=True)
 
         fold.select_folder(self, None, self.buss)
     def buss(self, diag, result):
         dpath = diag.select_folder_finish(result).get_path()
         print("youre a blud")
-        geuge = f"{dpath}/{self.name}"
-        with open(geuge, 'wb') as o:
-            o.write(self.outi)
+        try:
+           geuge = f"{dpath}/{self.img_txt.get_text()}"
+           with open(geuge, 'wb') as o:
+               o.write(self.outi)
+        except IsADirectoryError:
+            self.error("Failure", "That is a directory.")
            
 def on_activate(app):
     # Create window
