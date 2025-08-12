@@ -76,6 +76,12 @@ class MyWindow(Adw.ApplicationWindow):
         self.mask_b.set_halign(Gtk.Align.CENTER)
         self.box.append(self.mask_b)
 
+        self.post = Gtk.CheckButton(label='Add post processing')
+        self.post.connect('toggled', self.process)
+        self.post.set_valign(Gtk.Align.CENTER)
+        self.post.set_halign(Gtk.Align.CENTER)
+        self.box.append(self.post)
+
         self.tools = Adw.ToolbarView()
         self.tools.add_top_bar(self.header)
         self.tools.set_content(self.splash)
@@ -89,7 +95,7 @@ class MyWindow(Adw.ApplicationWindow):
         self.box.add_css_class("app")
         
         self.m_state = False
-
+        self.p_state = False
     def sets(self, action, param):
         def theme(crow, _):
             sm = self.get_application().get_style_manager()
@@ -132,7 +138,7 @@ class MyWindow(Adw.ApplicationWindow):
     def about(self, action, param):
         about = Adw.AboutWindow(
           application_name="rembg-gtk",
-          version="1.0.3",
+          version="1.0.4",
           developer_name="stainlesteel",
           license_type=Gtk.License.GPL_3_0,
           website="https://github.com/stainlesteel/rembg-gui",
@@ -150,6 +156,14 @@ class MyWindow(Adw.ApplicationWindow):
         else:
             self.m_state = False
             print("mask is off")
+    def process(self, check):
+        if self.post.props.active:
+            self.p_state = True
+            print("processing is on")
+        else:
+            self.p_state = False
+            print("processing is off")
+
     def loading(self):
         threading.Thread(target=self.rembg_start, daemon=True).start()
     def rembg_start(self):
@@ -184,6 +198,10 @@ class MyWindow(Adw.ApplicationWindow):
                    ini = f.read()
                if self.m_state:
                     self.outi = rembg.remove(ini, return_bytes=True, session=self.session, only_mask=True)
+               elif self.p_state:
+                    self.outi = rembg.remove(ini, return_bytes=True, session=self.session, post_process_mask=True)
+               elif self.p_state and self.m_state:
+                    self.outi = rembg.remove(ini, return_bytes=True, session=self.session, only_mask=True, post_process_mask=True)
                else:
                     self.outi = rembg.remove(ini, return_bytes=True, session=self.session)
                opath = os.path.dirname(fpath)
