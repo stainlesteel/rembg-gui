@@ -39,7 +39,13 @@ class MyWindow(Adw.ApplicationWindow):
         action.connect("activate", self.about)
         self.add_action(action)
 
+        sets = Gio.SimpleAction.new("settings", None)
+        sets.connect("activate", self.sets)
+        self.add_action(sets)
+
         menu = Gio.Menu.new()
+        # below is for settings
+        menu.append("Settings", "win.settings")
         menu.append("About rembg-gtk", "win.something") 
 
         self.popover = Gtk.PopoverMenu() 
@@ -63,6 +69,12 @@ class MyWindow(Adw.ApplicationWindow):
         self.button = Gtk.Button.new_with_label('Continue')
         self.button.connect("clicked", self.file)
         self.box.append(self.button)
+        
+        self.mask_b = Gtk.CheckButton(label='Get only mask')
+        self.mask_b.connect('toggled', self.mask)
+        self.mask_b.set_valign(Gtk.Align.CENTER)
+        self.mask_b.set_halign(Gtk.Align.CENTER)
+        self.box.append(self.mask_b)
 
         self.tools = Adw.ToolbarView()
         self.tools.add_top_bar(self.header)
@@ -75,19 +87,69 @@ class MyWindow(Adw.ApplicationWindow):
         self.popover.add_css_class("app")
         self.button.add_css_class("pill")
         self.box.add_css_class("app")
+        
+        self.m_state = False
+
+    def sets(self, action, param):
+        def theme(crow, _):
+            sm = self.get_application().get_style_manager()
+            index = crow.get_selected()
+            item = crow.get_model().get_item(index)
+            
+            if item.get_string() == "Dark":
+                sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+                crow.set_selected(2)
+            elif item.get_string() == "Light":
+                sm.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
+                crow.set_selected(1)
+            else:
+                sm.set_color_scheme(Adw.ColorScheme.PREFER_DARK)
+                crow.set_selected(0)
+
+        diag = Adw.PreferencesDialog()
+
+        sets = Adw.PreferencesPage()
+        sets.set_title("Settings")
+
+        s_group = Adw.PreferencesGroup()
+        s_group.set_title("Settings")
+
+        slist = Gtk.StringList.new(["Default","Light", "Dark"])
+
+        crow = Adw.ComboRow()
+        crow.set_title("Colour Theme")
+        crow.set_model(slist)
+        crow.set_use_subtitle(True)
+        crow.connect("notify::selected", theme)
+
+        s_group.add(crow)
+        sets.add(s_group)
+        diag.add(sets)
+        crow.add_css_class("app")
+        diag.add_css_class("app")
+        diag.present()
 
     def about(self, action, param):
         about = Adw.AboutWindow(
           application_name="rembg-gtk",
-          version="1.0.0",
+          version="1.0.3",
           developer_name="stainlesteel",
           license_type=Gtk.License.GPL_3_0,
           website="https://github.com/stainlesteel/rembg-gui",
           issue_url="https://github.com/stainlesteel/rembg-gui/issues",
           copyright="2025 stainlesteel, All Rights Reserved",
+            
         )
         about.add_css_class("app")
         about.present()
+    def mask(self, check):
+        if self.mask_b.props.active:
+            self.m_state = True
+            self.error("Info", "This will heavily distort the image and isn't used for removing backgrounds.")
+            print("mask is on")
+        else:
+            self.m_state = False
+            print("mask is off")
     def loading(self):
         threading.Thread(target=self.rembg_start, daemon=True).start()
     def rembg_start(self):
@@ -120,7 +182,10 @@ class MyWindow(Adw.ApplicationWindow):
 
                with open(fpath, 'rb') as f:
                    ini = f.read()
-               self.outi = rembg.remove(ini, return_bytes=True, session=self.session)
+               if self.m_state:
+                    self.outi = rembg.remove(ini, return_bytes=True, session=self.session, only_mask=True)
+               else:
+                    self.outi = rembg.remove(ini, return_bytes=True, session=self.session)
                opath = os.path.dirname(fpath)
 
                bmg = io.BytesIO(self.outi)
@@ -262,5 +327,5 @@ class MyApp(Adw.Application):
             win.present()
             win.loading()
 
-app = MyApp(application_id="com.example.GtkApplication")
+app = MyApp(application_id="com.github.stainlesteel.rembg-gui")
 app.run(sys.argv)

@@ -5,9 +5,19 @@ sdk: org.freedesktop.Sdk
 command: ./main
 finish-args:
    - --socket=x11
+   - --socket=wayland
    - --share=ipc
-   - --device=dri
+   - --device=all
    - --filesystem=host
    - talk-name=org.freedesktop.secrets
    - talk-name=org.freedesktop.portal.Fcitx
-
+modules:
+   - name: rembg-gtk
+   - buildsystem: simple
+   - sources:
+      type: git
+      url: https://github.com/stainlesteel/rembg-gui.git
+      tag: v.1.0.0
+     build-commands:
+      - pip install --verbose --no-index --find-links=$FLATPAK_BUILD_DIR/wheelhouse .
+      - install -Dm755 main.py /app/bin/
